@@ -20,7 +20,7 @@ extern "C" void __cxa_pure_virtual() {;}
 //
 unsigned char setBit(unsigned char byteIn, int bitNum, boolean setClear);
 void IRQ_resolve();
-void IRQ_reset_and_respond(void);
+int IRQ_reset_and_respond(void);
 void clear_interrupts(void);
 
 #include "C:\Program Files (x86)\Arduino\hardware\arduino\variants\standard\pins_arduino.h" 

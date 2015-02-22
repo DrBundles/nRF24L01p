@@ -52,6 +52,11 @@ class NRF24L01pClass
 	*/
 	void begin(void);
 	
+	/*SETUP DATA PIPES
+	Setup the data pipes for TX and RX
+	*/
+	void setup_data_pipes(unsigned char pipesOn [], unsigned char fixedPayloadWidth []);
+	
 
 	/* Write Register
 	
@@ -90,12 +95,12 @@ class NRF24L01pClass
 	
 	
 	/* rData Receive Data
-	Receieve data
+	Receive data
 	@param DATA is the data to transmit
 	@param BYTE_NUM is the number of bytes to transmit 1-5
 	register values are read into NRF24L01Class.register_value array
 	*/
-	void rData(void);
+	unsigned char * rData(int byteNum);
 	
 	
 	/* flushTX Flush tX FIFO

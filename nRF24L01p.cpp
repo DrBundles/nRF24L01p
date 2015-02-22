@@ -73,6 +73,12 @@ void NRF24L01pClass::begin(void)
 
 }
 
+void NRF24L01pClass::setup_data_pipes(unsigned char pipesOn [], unsigned char fixedPayloadWidth [])
+{
+	writeRegister(EN_RXADDR, pipesOn, 1);
+	writeRegister(RX_PW_P0, fixedPayloadWidth, 1);
+}
+
 
 
 void NRF24L01pClass::writeRegister(unsigned char thisRegister, unsigned char thisValue [5], int byteNum)
@@ -99,7 +105,7 @@ void NRF24L01pClass::writeRegister(unsigned char thisRegister, unsigned char thi
 unsigned char * NRF24L01pClass::readRegister(unsigned char thisRegister, int byteNum)
 {
 	// Must start with CSN pin high, then bring CSN pin low for the transfer
-	// Transmit the command byte and the same number of dummy bytes as expected to recieve from the register
+	// Transmit the command byte and the same number of dummy bytes as expected to receive from the register
 	// Read the same number of bytes from radio plus the STATUS register as the first byte returned
 	// Bring CSN pin back to high
 	digitalWrite(csn_pin, LOW);
@@ -114,6 +120,8 @@ unsigned char * NRF24L01pClass::readRegister(unsigned char thisRegister, int byt
 		//Serial.println(register_value[ind], BIN);
 		ind = ind+1;
 	}
+	
+	digitalWrite(csn_pin, HIGH);
 	
 	return register_value;
 	
@@ -177,7 +185,6 @@ void NRF24L01pClass::txData(unsigned char DATA [5], int BYTE_NUM)
 	
 	// First the command byte (0xA0, W_TX_PAYLOAD) is sent and then the payload. 
 	// The number of payload bytes sent must match the payload length of the receiver you are sending the payload to
-
 	writeRegister(W_TX_PAYLOAD, DATA, BYTE_NUM);
 	
 	// When sending packets, the CE pin (which is normally held low in TX operation) is set to high for a minimum of 10us to send the packet.
@@ -195,6 +202,29 @@ void NRF24L01pClass::txData(unsigned char DATA [5], int BYTE_NUM)
 	FIFO before you do the CE toggle to send them on their way.
 	*/
 	
+	
+}
+
+
+/* rData Receive Data
+Receive data
+@param DATA is the data to transmit
+@param BYTE_NUM is the number of bytes to transmit 1-5
+register values are read into NRF24L01Class.register_value array
+*/
+unsigned char * NRF24L01pClass::rData(int byteNum)
+{
+
+	// Bring CE low to disable the receiver
+	digitalWrite(ce_pin, LOW);
+	
+	// Execute R_RX_PAYLOAD operation
+	// First the command byte (0x61, R_RX_PAYLOAD) is sent and then the payload.
+	// The number of payload bytes sent must match the payload length of the receiver you are sending the payload to
+	readRegister(R_RX_PAYLOAD, byteNum);
+	
+	// Bring CE high to re-enable the receiver
+	digitalWrite(ce_pin, HIGH);
 	
 }
 
