@@ -57,6 +57,11 @@
 #define DYNPD	    0x1C
 #define FEATURE	    0x1D
 
+/*SFR Registers*/
+#define RFDAT       0xE5
+#define RFCTL       0xE6
+#define RFCON       0x90
+
 /* Bit Mnemonics */
 #define MASK_RX_DR  6
 #define MASK_TX_DS  5

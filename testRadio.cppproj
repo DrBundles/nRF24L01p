@@ -196,7 +196,7 @@ vmresolved.tools.path=C:\Program Files (x86)\Arduino\hardware\tools\avr
         <visualmicro.application.name>arduino10x</visualmicro.application.name>
         <visualmicro.package.name>arduino</visualmicro.package.name>
         <visualmicro.platform.name>avr</visualmicro.platform.name>
-        <arduino.upload.port>COM3</arduino.upload.port>
+        <arduino.upload.port>COM8</arduino.upload.port>
       </VisualMicroSettings>
     </VisualMicroSettings>
     <VMSETTING_IncludePaths>C:/Program Files (x86)/Arduino/hardware/arduino/cores/arduino;C:/Program Files (x86)/Arduino/hardware/arduino/variants/standard;../../testRadio;C:/Program Files (x86)/Arduino/libraries/SPI;C:/Program Files (x86)/Arduino/libraries/SPI/utility;C:/Program Files (x86)/Arduino/libraries;C:/Program Files (x86)/Arduino/hardware/arduino/libraries;C:/Program Files (x86)/Visual Micro/Visual Micro for Arduino/Micro Platforms/default/debuggers;G:/Dropbox/Arduino/libraries;c:/program files (x86)/arduino/hardware/tools/avr/avr/include/;c:/program files (x86)/arduino/hardware/tools/avr/avr/include/avr/;c:/program files (x86)/arduino/hardware/tools/avr/avr/;c:/program files (x86)/arduino/hardware/tools/avr/lib/gcc/avr/4.3.2/include/;;</VMSETTING_IncludePaths>
@@ -357,7 +357,7 @@ vmresolved.tools.path=C:\Program Files (x86)\Arduino\hardware\tools\avr
         <visualmicro.application.name>arduino10x</visualmicro.application.name>
         <visualmicro.package.name>arduino</visualmicro.package.name>
         <visualmicro.platform.name>avr</visualmicro.platform.name>
-        <arduino.upload.port>COM3</arduino.upload.port>
+        <arduino.upload.port>COM8</arduino.upload.port>
       </VisualMicroSettings>
     </VisualMicroSettings>
     <VMSETTING_IncludePaths>C:/Program Files (x86)/Arduino/hardware/arduino/cores/arduino;C:/Program Files (x86)/Arduino/hardware/arduino/variants/standard;../../testRadio;C:/Program Files (x86)/Arduino/libraries/SPI;C:/Program Files (x86)/Arduino/libraries/SPI/utility;C:/Program Files (x86)/Arduino/libraries;C:/Program Files (x86)/Arduino/hardware/arduino/libraries;C:/Program Files (x86)/Visual Micro/Visual Micro for Arduino/Micro Platforms/default/debuggers;G:/Dropbox/Arduino/libraries;c:/program files (x86)/arduino/hardware/tools/avr/avr/include/;c:/program files (x86)/arduino/hardware/tools/avr/avr/include/avr/;c:/program files (x86)/arduino/hardware/tools/avr/avr/;c:/program files (x86)/arduino/hardware/tools/avr/lib/gcc/avr/4.3.2/include/;;</VMSETTING_IncludePaths>

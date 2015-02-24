@@ -10,8 +10,11 @@ volatile unsigned char IRQ_state = 0x00;
 // Used to check the status of a given bit in a variable
 #define CHECK_BIT(var,pos) ((var & (1 << pos)) == (1 << pos))
 
+// GLOBALS >> GLOBALS  >> GLOBALS  >> GLOBALS  >> GLOBALS 
 // Set if the radio is transmitter (TX) or receiver (RX)
-int radioMode = 1; // radioMode = 1 for RX, 0 for TX
+int radioMode = 0; // radioMode = 1 for RX, 0 for TX
+int rxDataFLAG = 0; // Indicates that there is data in the RX FIFO buffer
+// GLOBALS << GLOBALS  << GLOBALS  << GLOBALS  << GLOBALS 
 
 
 void setup()
@@ -38,11 +41,16 @@ void setup()
 	// Setup data pipes, addresses etc
 	//
 	// Use default addresses for now _ CHANGE ADDRESSES HERE IN FUTURE
-	unsigned char pipesOn [] = {0x01}; // which pipes to turn on for receiving
-	unsigned char fixedPayloadWidth [] = {0x0A}; // number of bytes for payload width
+	unsigned char pipesOn [] = {0x03}; // which pipes to turn on for receiving
+	unsigned char fixedPayloadWidth [] = {0x05}; // number of bytes for payload width
 	myRadio->setup_data_pipes(pipesOn, fixedPayloadWidth);
 	
-	// Configure radio to be TX (transmitter) or RX (reciever)
+	//DEBUG - change RX_ADDR_P0 to see if I am reading the right value
+	unsigned char tmpArr [] = {0xE7,0xE7,0xE7,0xE7,0xE7};
+	myRadio->writeRegister(RX_ADDR_P0,tmpArr, 5);
+	
+	
+	// Configure radio to be TX (transmitter) or RX (receiver)
 	Serial.println("Configure Radio");
 	if (radioMode)
 	{myRadio->rMode();}// Configure radio to be a receiver
@@ -74,34 +82,80 @@ void setup()
 
 void loop()
 {
-
 	/* add main program code here */
-	int pipeNumber = 0x07;
+	
+	/* DEBUG NOTES !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		if reading RX Data starts acting weird, you may need to myRadio->flushRX();
+		This seems to happen when timing gets off. RX FIFO may just fill up and not
+		get cleared correctly sometimes? I just needed to use it often when getting
+		the transmitter running. Otherwise, each byte int he FIFO would be the same
+		as the MSByte or LSByte.
+	*/
 	
 	if (IRQ_state == 1)
 	{
-		pipeNumber = IRQ_reset_and_respond();
+		IRQ_reset_and_respond();
 	}
 	
+	/* STATUS println for DEBUG
 	unsigned char * ptmp_array;
 	Serial.println("----------------------------------");
 	Serial.print("STATUS: ");
-	ptmp_array = myRadio->readRegister(STATUS,0);
+	ptmp_array = myRadio->readRegister(STATUS,1);
 	Serial.println(*ptmp_array, BIN);
+	*/
 	
-	if (radioMode == 0)
+	// Radio is in TX mode
+	if (radioMode == 0) 
 	{
 		// Send data
 		Serial.println("Transmit code abc go");
-		unsigned char tmpData [] = {1,2,3,4,5,6,7,8,9,10}; // Data needs to be the same size as the fixedDataWidth set in setup
-		myRadio->txData(tmpData, 10); // This is currently sending data to pipe 0 at the default address. Change this once the radio is working
+		unsigned char tmpData [] = {1,2,3,4,26}; // Data needs to be the same size as the fixedDataWidth set in setup
+		myRadio->txData(tmpData, 5); // This is currently sending data to pipe 0 at the default address. Change this once the radio is working
 		delay(2000);
 	}
+	// Radio is in RX mode
 	else
 	{
-		// Receive data and print
-		Serial.println("Receieve Mode");
+		if (rxDataFLAG == 1)
+		{
+			// Receive data and print
+			
+			unsigned char * tmpRxData = myRadio->rData(5);
+			Serial.println("RX Data: ");
+			for (int x=0; x<5; x++)
+			{
+				Serial.print("Element ");
+				Serial.print(x);
+				Serial.print(": ");
+				Serial.println(*(tmpRxData+x));
+			}
+			
+			myRadio->flushRX();
+			rxDataFLAG = 0; // reset rxDataFLAG
+		}
+		
+		
 	}
+	
+	/*
+	unsigned char * tmpRxData = myRadio->rData(5);
+	Serial.println("RX Data: ");
+	for (int x=0; x<5; x++)
+	{
+		Serial.print("Element ");
+		Serial.print(x);
+		Serial.print(": ");
+		Serial.println(*(tmpRxData+x));
+	
+	myRadio->flushRX();
+	}
+	*/
+	
+	//myRadio->flushRX();
+	
+	delay(50); // Short delay to keep everything running well. Make sure the IRQ's get cleared before next loop. etc...
+	
 }
 
 
@@ -141,21 +195,24 @@ void IRQ_resolve()
 Reset the IRQ in the radio STATUS register
 Also resolve the condition which triggered the interrupt
 */
-int IRQ_reset_and_respond(void)
+void IRQ_reset_and_respond(void)
 {
 	Serial.println(" ------------------ RESPOND TO IRQ --------------------- ");
 	unsigned char tmp_state [] = {0x00};
 	unsigned char tmp_status = * myRadio->readRegister(STATUS,1);
 	
-	int pipeNumber = 0x07; // pipeNumber = 111 initially, which means RX_FIFO Empty, number changes for RX FIFO interrupt
-	
 	if CHECK_BIT(tmp_status,0) // TX_FIFO full
 	{
 		Serial.println("TX_FIFO Full");
 	}
+	if (CHECK_BIT(tmp_status,1)|CHECK_BIT(tmp_status,2)|CHECK_BIT(tmp_status,3)) // TX_FIFO full
+	{
+		Serial.println("Pipe Number Changed");
+	}
 	if CHECK_BIT(tmp_status,4) // Maximum number of TX retries interrupt
 	{
 		Serial.println("Max TX retries IRQ");
+		myRadio->flushTX();
 	}
 	if CHECK_BIT(tmp_status,5) // Data sent TX FIFO interrupt
 	{
@@ -167,12 +224,12 @@ int IRQ_reset_and_respond(void)
 		// Read the data from the R_RX_PAYLOAD
 		// RX_P_NO bits 3:1 tell what pipe number the payload is available in 000-101: Data Pipe Number, 110: Not Used, 111: RX_FIFO Empty
 		// Get bits 3:1 and right shift to get pipe number
-		pipeNumber = (tmp_status & 0xE) >> 1;
+		//pipeNumber = (tmp_status & 0xE) >> 1;
+		rxDataFLAG = 1; //Set Rx Data FLAG
 	}
 	
 	clear_interrupts();
-	
-	return pipeNumber;
+	IRQ_state = 0; //reset IRQ_state
 	
 }
 

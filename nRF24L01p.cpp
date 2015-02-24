@@ -81,13 +81,14 @@ void NRF24L01pClass::setup_data_pipes(unsigned char pipesOn [], unsigned char fi
 
 
 
-void NRF24L01pClass::writeRegister(unsigned char thisRegister, unsigned char thisValue [5], int byteNum)
+void NRF24L01pClass::writeRegister(unsigned char thisRegister, unsigned char thisValue [], int byteNum)
 {
 	// Must start with CSN pin high, then bring CSN pin low for the transfer
 	// Transmit the command byte
 	// Bring CSN pin back to high
 	thisRegister = 0x20 | thisRegister;
 	digitalWrite(csn_pin, LOW);
+	
 	SPI.transfer(thisRegister); // This is the register that is being written to
 	int ind=0;
 	while (ind < byteNum)
@@ -109,8 +110,10 @@ unsigned char * NRF24L01pClass::readRegister(unsigned char thisRegister, int byt
 	// Read the same number of bytes from radio plus the STATUS register as the first byte returned
 	// Bring CSN pin back to high
 	digitalWrite(csn_pin, LOW);
+	
 	SPI.transfer(thisRegister); // This is the register that is being read from
 	int ind = 0;
+	
 	while (ind <= byteNum)
 	{
 		register_value[ind] = SPI.transfer(0x00); // First byte returned is the status, subsequent bytes are from register
@@ -178,18 +181,35 @@ Transmit data
 @param DATA is the data to transmit
 @param BYTE_NUM is the number of bytes to transmit 1-5
 */
-void NRF24L01pClass::txData(unsigned char DATA [5], int BYTE_NUM)
+void NRF24L01pClass::txData(unsigned char DATA [], int BYTE_NUM)
 {
-	// Put the radio into transmit mode
-	txMode();
-	
 	// First the command byte (0xA0, W_TX_PAYLOAD) is sent and then the payload. 
 	// The number of payload bytes sent must match the payload length of the receiver you are sending the payload to
-	writeRegister(W_TX_PAYLOAD, DATA, BYTE_NUM);
+	
+	// Must start with CSN pin high, then bring CSN pin low for the transfer
+	// Transmit the command byte
+	// Bring CSN pin back to high
+	
+	digitalWrite(csn_pin, LOW);
+	SPI.transfer(W_TX_PAYLOAD); // This is the register that is being written to
+	int ind=0;
+	Serial.println("DATA"); //DEBUG
+	while (ind < BYTE_NUM)
+	{
+		//DEBUG
+		Serial.print("Element ");
+		Serial.print(ind);
+		Serial.print(": ");
+		Serial.println(DATA[ind]);
+		
+		SPI.transfer(DATA[ind]);
+		ind = ind+1;
+	}
+	digitalWrite(csn_pin, HIGH);
 	
 	// When sending packets, the CE pin (which is normally held low in TX operation) is set to high for a minimum of 10us to send the packet.
 	digitalWrite(ce_pin, HIGH);
-	delay(1);
+	delay(1); 
 	digitalWrite(ce_pin, LOW);
 	
 	// Once the packet was sent, a TX_DS interrupt will occur
@@ -221,10 +241,28 @@ unsigned char * NRF24L01pClass::rData(int byteNum)
 	// Execute R_RX_PAYLOAD operation
 	// First the command byte (0x61, R_RX_PAYLOAD) is sent and then the payload.
 	// The number of payload bytes sent must match the payload length of the receiver you are sending the payload to
-	readRegister(R_RX_PAYLOAD, byteNum);
 	
+	digitalWrite(csn_pin, LOW);
+	
+	SPI.transfer(R_RX_PAYLOAD); // This is the register that is being read from
+	int ind = 0;
+	
+	while (ind <= byteNum)
+	{
+		register_value[ind] = SPI.transfer(0x00); // First byte returned is the status, subsequent bytes are from register
+		//Serial.print("Register byte ");
+		//Serial.print(ind);
+		//Serial.print(" value = ");
+		//Serial.println(register_value[ind]);
+		ind = ind+1;
+	}
+	
+	digitalWrite(csn_pin, HIGH);
+
 	// Bring CE high to re-enable the receiver
 	digitalWrite(ce_pin, HIGH);
+	
+	return register_value;
 	
 }
 
@@ -239,6 +277,19 @@ void NRF24L01pClass::flushTX(void)
 	// Bring CSN pin back to high
 	digitalWrite(csn_pin, LOW);
 	SPI.transfer(FLUSH_TX); // This is the register that is being written to
+	digitalWrite(csn_pin, HIGH);
+}
+
+/* flushTX Flush TX FIFO
+
+*/
+void NRF24L01pClass::flushRX(void)
+{
+	// Must start with CSN pin high, then bring CSN pin low for the transfer
+	// Transmit the command byte
+	// Bring CSN pin back to high
+	digitalWrite(csn_pin, LOW);
+	SPI.transfer(FLUSH_RX); // This is the register that is being written to
 	digitalWrite(csn_pin, HIGH);
 }
 

@@ -107,6 +107,10 @@ class NRF24L01pClass
 	*/
 	void flushTX(void);
 	
+	/* flushTX Flush RX FIFO
+	*/
+	void flushRX(void);
+	
 
 };
 
