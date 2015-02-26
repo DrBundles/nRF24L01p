@@ -1,3 +1,43 @@
+/* BY: Steve Lammers, www.stevelammers.com
+	
+	NOTES: 
+	
+	TODO: Change addresses
+		  Add Labview connection for main receiver
+		  New code that works with handshake for mesh network
+		  JTAG debugger for AVR
+		  
+	
+	// DEBUG NOTES !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		if reading RX Data starts acting weird, you may need to myRadio->flushRX();
+		This seems to happen when timing gets off. RX FIFO may just fill up and not
+		get cleared correctly sometimes? I just needed to use it often when getting
+		the transmitter running. Otherwise, each byte int he FIFO would be the same
+		as the MSByte or LSByte.
+		
+	// STATUS println for DEBUG
+	unsigned char * ptmp_array;
+	Serial.println("----------------------------------");
+	Serial.print("STATUS: ");
+	ptmp_array = myRadio->readRegister(STATUS,1);
+	Serial.println(*ptmp_array, BIN);
+
+	// >> DEBUG >> DEBUG >> DEBUG >> DEBUG for main LOOP-------
+	unsigned char * tmpRxData = myRadio->rData(5);
+	Serial.println("RX Data: ");
+	for (int x=0; x<5; x++)
+	{
+		Serial.print("Element ");
+		Serial.print(x);
+		Serial.print(": ");
+		Serial.println(*(tmpRxData+x));
+	}
+	
+	myRadio->flushRX();
+	// << DEBUG << DEBUG << DEBUG << DEBUG for main LOOP-------
+
+*/
+
 #include "nRF24L01p.h"
 #include "nRF24L01_define_map.h"
 #include "SPI/SPI.h"
@@ -12,7 +52,7 @@ volatile unsigned char IRQ_state = 0x00;
 
 // GLOBALS >> GLOBALS  >> GLOBALS  >> GLOBALS  >> GLOBALS 
 // Set if the radio is transmitter (TX) or receiver (RX)
-int radioMode = 0; // radioMode = 1 for RX, 0 for TX
+int radioMode = 1; // radioMode = 1 for RX, 0 for TX
 int rxDataFLAG = 0; // Indicates that there is data in the RX FIFO buffer
 // GLOBALS << GLOBALS  << GLOBALS  << GLOBALS  << GLOBALS 
 
@@ -84,26 +124,12 @@ void loop()
 {
 	/* add main program code here */
 	
-	/* DEBUG NOTES !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		if reading RX Data starts acting weird, you may need to myRadio->flushRX();
-		This seems to happen when timing gets off. RX FIFO may just fill up and not
-		get cleared correctly sometimes? I just needed to use it often when getting
-		the transmitter running. Otherwise, each byte int he FIFO would be the same
-		as the MSByte or LSByte.
-	*/
+	
 	
 	if (IRQ_state == 1)
 	{
 		IRQ_reset_and_respond();
 	}
-	
-	/* STATUS println for DEBUG
-	unsigned char * ptmp_array;
-	Serial.println("----------------------------------");
-	Serial.print("STATUS: ");
-	ptmp_array = myRadio->readRegister(STATUS,1);
-	Serial.println(*ptmp_array, BIN);
-	*/
 	
 	// Radio is in TX mode
 	if (radioMode == 0) 
@@ -137,22 +163,6 @@ void loop()
 		
 		
 	}
-	
-	/*
-	unsigned char * tmpRxData = myRadio->rData(5);
-	Serial.println("RX Data: ");
-	for (int x=0; x<5; x++)
-	{
-		Serial.print("Element ");
-		Serial.print(x);
-		Serial.print(": ");
-		Serial.println(*(tmpRxData+x));
-	
-	myRadio->flushRX();
-	}
-	*/
-	
-	//myRadio->flushRX();
 	
 	delay(50); // Short delay to keep everything running well. Make sure the IRQ's get cleared before next loop. etc...
 	
