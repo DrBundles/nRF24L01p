@@ -1,0 +1,15 @@
+NRF24L01p	KEYWORD1
+get_ce_pin	KEYWORD2
+setDebugVal	KEYWORD2
+setBit	KEYWORD2
+begin	KEYWORD2
+setup_data_pipes	KEYWORD2
+writeRegister	KEYWORD2
+readRegister	KEYWORD2
+configRadio	KEYWORD2
+txMode	KEYWORD2
+rxMode	KEYWORD2
+tsData	KEYWORD2
+rData	KEYWORD2
+flushTX	KEYWORD2
+flushRX	KEYWORD2

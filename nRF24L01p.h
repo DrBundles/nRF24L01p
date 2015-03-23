@@ -1,17 +1,15 @@
-/* nRF24L01p.h - Library for nRF24L01p Radio
+/* NRF24L01p.h - Library for NRF24L01p Radio
 	Created by: Steve Lammers, 2/21/2015
 	Released to the public domain.
 */
-#ifndef nRF24L01p_h
-#define nRF24L01p_h
+#ifndef NRF24L01p_h
+#define NRF24L01p_h
 #include "Arduino.h"
 
 // TODO
-extern NRF24L01pClass NRF24L01p; // is this necessary?
-//CONSTRUCTOR
 // Protected vs private variables (incl _private variable names)
 
-class NRF24L01pClass
+class NRF24L01p
 {
  protected:
 
@@ -29,7 +27,8 @@ class NRF24L01pClass
 		@param _cepin id the pin attached to Chip Enable on RF Module
 		@param _cspin is the pin attached to Chip Select
 	*/
-	void init(int _cepin, int _csnpin); // Constructor prototype declaration, See Radio.cpp for definition
+	//void init(int _cepin, int _csnpin); // Constructor prototype declaration, See Radio.cpp for definition
+	NRF24L01p(int _cepin, int _csnpin); // Constructor prototype declaration, See Radio.cpp for definition
 	
 	
 	/*DEBUG
@@ -70,7 +69,7 @@ class NRF24L01pClass
 	unsigned char * readRegister(unsigned char thisRegister, int byteNum);
 	
 	/* CONFIG
-	Configure the nRF24L01p and startup
+	Configure the NRF24L01p and startup
 	@param RXTX sets the radio into 1:Receive 0:Transmit
 	@param PWRUP_PWRDOWN 1:Power Up 0:Power Down
 	*/

@@ -1,4 +1,4 @@
-/* nRF24L01p.h - Library for nRF24L01p Radio
+/* NRF24L01p.h - Library for NRF24L01p Radio
 	Created by: Steve Lammers, 2/21/2015
 	Released to the public domain.
 
@@ -17,7 +17,7 @@
 	IRQ  2
 */ 
 
-#include "nRF24L01p.h"
+#include "NRF24L01p.h"
 #include "nRF24L01_define_map.h"
 #include "string.h"
 #include "SPI.h"
@@ -25,24 +25,24 @@
 // Used to check the status of a given bit in a variable
 #define CHECK_BIT(var,pos) ((var & (1 << pos)) == (1 << pos))
 
-
-void NRF24L01pClass::init(int _cepin, int _csnpin)
+NRF24L01p::NRF24L01p(int _cepin, int _csnpin)
 {
 	ce_pin = _cepin;
 	csn_pin = _csnpin;
 }
 
-int NRF24L01pClass::get_ce_pin(void) 
+
+int NRF24L01p::get_ce_pin(void) 
 { 
 	return ce_pin; 
 }
 	
-void NRF24L01pClass::setDebugVal(int tmp_debug_val)
+void NRF24L01p::setDebugVal(int tmp_debug_val)
 {
 	debug_val = tmp_debug_val;
 }
 	
-int NRF24L01pClass::getDebugVal(void)
+int NRF24L01p::getDebugVal(void)
 {
 	return debug_val;
 }
@@ -52,7 +52,7 @@ Used to more easily set or clear bits in registers etc
 @param bitNum is the bit to change, 0-7
 @param setClear is the boolean value to set the bit 1 or 0
 */
-unsigned char NRF24L01pClass::setBit(unsigned char byteIn, int bitNum, boolean setClear)
+unsigned char NRF24L01p::setBit(unsigned char byteIn, int bitNum, boolean setClear)
 {
 	if(setClear == 1)
 		byteIn |= (1<<bitNum);
@@ -63,7 +63,7 @@ unsigned char NRF24L01pClass::setBit(unsigned char byteIn, int bitNum, boolean s
 }
 	
 
-void NRF24L01pClass::begin(void)
+void NRF24L01p::begin(void)
 {
 	// Initialize pins
 	pinMode(ce_pin, OUTPUT);
@@ -76,7 +76,7 @@ void NRF24L01pClass::begin(void)
 
 }
 
-void NRF24L01pClass::setup_data_pipes(unsigned char pipesOn [], unsigned char fixedPayloadWidth [])
+void NRF24L01p::setup_data_pipes(unsigned char pipesOn [], unsigned char fixedPayloadWidth [])
 {
 	writeRegister(EN_RXADDR, pipesOn, 1);
 	writeRegister(RX_PW_P0, fixedPayloadWidth, 1);
@@ -84,7 +84,7 @@ void NRF24L01pClass::setup_data_pipes(unsigned char pipesOn [], unsigned char fi
 
 
 
-void NRF24L01pClass::writeRegister(unsigned char thisRegister, unsigned char thisValue [], int byteNum)
+void NRF24L01p::writeRegister(unsigned char thisRegister, unsigned char thisValue [], int byteNum)
 {
 	// Must start with CSN pin high, then bring CSN pin low for the transfer
 	// Transmit the command byte
@@ -106,7 +106,7 @@ void NRF24L01pClass::writeRegister(unsigned char thisRegister, unsigned char thi
 
 
 
-unsigned char * NRF24L01pClass::readRegister(unsigned char thisRegister, int byteNum)
+unsigned char * NRF24L01p::readRegister(unsigned char thisRegister, int byteNum)
 {
 	// Must start with CSN pin high, then bring CSN pin low for the transfer
 	// Transmit the command byte and the same number of dummy bytes as expected to receive from the register
@@ -135,11 +135,11 @@ unsigned char * NRF24L01pClass::readRegister(unsigned char thisRegister, int byt
 
 
 /* CONFIG
-Configure the nRF24L01p and startup
+Configure the NRF24L01p and startup
 @param RXTX sets the radio into 1:Receive 0:Transmit
 @param PWRUP_PWRDOWN 1:Power Up 0:Power Down
 */
-void NRF24L01pClass::configRadio(boolean RXTX, boolean PWRUP_PWRDOWN)
+void NRF24L01p::configRadio(boolean RXTX, boolean PWRUP_PWRDOWN)
 {
 	// CRC is enabled with a 2-byte encoding scheme
 	unsigned char configByte = 0b00001111;
@@ -160,7 +160,7 @@ void NRF24L01pClass::configRadio(boolean RXTX, boolean PWRUP_PWRDOWN)
 /* txMode Transmit Mode
 Put radio into transmission mode
 */
-void NRF24L01pClass::txMode(void)
+void NRF24L01p::txMode(void)
 {
 	configRadio(0,1);
 	// CE is held LOW unless a packet is being actively transmitted, In which case it is toggled high for >10us
@@ -170,7 +170,7 @@ void NRF24L01pClass::txMode(void)
 /* rMode Receive Mode
 Put radio into receiving mode
 */
-void NRF24L01pClass::rMode(void)
+void NRF24L01p::rMode(void)
 {
 	configRadio(1,1);
 	// CE HIGH monitors air and receives packets while in receive mode
@@ -184,7 +184,7 @@ Transmit data
 @param DATA is the data to transmit
 @param BYTE_NUM is the number of bytes to transmit 1-5
 */
-void NRF24L01pClass::txData(unsigned char DATA [], int BYTE_NUM)
+void NRF24L01p::txData(unsigned char DATA [], int BYTE_NUM)
 {
 	// First the command byte (0xA0, W_TX_PAYLOAD) is sent and then the payload. 
 	// The number of payload bytes sent must match the payload length of the receiver you are sending the payload to
@@ -235,7 +235,7 @@ Receive data
 @param BYTE_NUM is the number of bytes to transmit 1-5
 register values are read into NRF24L01Class.register_value array
 */
-unsigned char * NRF24L01pClass::rData(int byteNum)
+unsigned char * NRF24L01p::rData(int byteNum)
 {
 
 	// Bring CE low to disable the receiver
@@ -273,7 +273,7 @@ unsigned char * NRF24L01pClass::rData(int byteNum)
 /* flushTX Flush TX FIFO
 
 */
-void NRF24L01pClass::flushTX(void)
+void NRF24L01p::flushTX(void)
 {
 	// Must start with CSN pin high, then bring CSN pin low for the transfer
 	// Transmit the command byte
@@ -286,7 +286,7 @@ void NRF24L01pClass::flushTX(void)
 /* flushTX Flush TX FIFO
 
 */
-void NRF24L01pClass::flushRX(void)
+void NRF24L01p::flushRX(void)
 {
 	// Must start with CSN pin high, then bring CSN pin low for the transfer
 	// Transmit the command byte
@@ -298,7 +298,7 @@ void NRF24L01pClass::flushRX(void)
 
 
 
-//NRF24L01pClass NRF24L01p;
+//NRF24L01p NRF24L01p;
 
 
 
