@@ -157,6 +157,36 @@ void NRF24L01p::configRadio(boolean RXTX, boolean PWRUP_PWRDOWN)
 }
 
 
+/* IRQ_reset_and_respond
+Reset the IRQ in the radio STATUS register
+Also resolve the condition which triggered the interrupt
+*/
+unsigned char NRF24L01p::IRQ_reset_and_respond(void)
+{
+	// Serial.println(" ------------------ RESPOND TO IRQ --------------------- ");
+	unsigned char tmp_status = * readRegister(STATUS,1);
+	
+	clear_interrupts();
+	
+	return tmp_status;
+	
+}
+
+
+void NRF24L01p::clear_interrupts(void)
+{
+	// Clear any interrupts
+	unsigned char tmp_state [] = {1<<RX_DR};
+	writeRegister(STATUS, tmp_state, 1);
+	tmp_state [0] = 1<<TX_DS;
+	writeRegister(STATUS, tmp_state, 1);
+	tmp_state [0] = 1<<MAX_RT;
+	writeRegister(STATUS, tmp_state, 1);
+	// Flush the TX register
+	flushTX();
+}
+
+
 /* txMode Transmit Mode
 Put radio into transmission mode
 */

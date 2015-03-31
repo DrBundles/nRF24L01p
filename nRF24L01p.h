@@ -75,6 +75,15 @@ class NRF24L01p
 	*/
 	void configRadio(boolean RXTX, boolean PWRUP_PWRDOWN);
 	
+	/* IRQ_reset_and_respond
+	Reset the IRQ in the radio STATUS register
+	Also resolve the condition which triggered the interrupt
+	*/
+	unsigned char IRQ_reset_and_respond(void);
+	
+	/* IRQ clear interrupts
+	*/
+	void clear_interrupts(void);
 	
 	/* txMode Transmit Mode
 	Put radio into transmission mode
