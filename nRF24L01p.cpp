@@ -76,12 +76,38 @@ void NRF24L01p::begin(void)
 
 }
 
-void NRF24L01p::setup_data_pipes(unsigned char pipesOn [], unsigned char fixedPayloadWidth [])
+void NRF24L01p::setup_data_pipes(unsigned char pipesOn [], const int fixedPayloadWidth)
 {
 	writeRegister(EN_RXADDR, pipesOn, 1);
-	writeRegister(RX_PW_P0, fixedPayloadWidth, 1);
+	unsigned char widthArg [] = {(unsigned char)fixedPayloadWidth};
+	writeRegister(RX_PW_P0, widthArg, 1);
 }
 
+
+void NRF24L01p::set_data_rate(const int dataRate)
+{
+	int RF_DR_LOW_val = 0;
+	int RF_DR_HIGH_val = 1;
+	switch(dataRate)
+	{
+		case 250: // 250-kBPS
+		RF_DR_LOW_val = 1;
+		RF_DR_HIGH_val = 0;
+		case 1: // 1-MBPS
+		RF_DR_LOW_val = 0;
+		RF_DR_HIGH_val = 0;
+		case 2: // 2-MBPS
+		RF_DR_LOW_val = 0;
+		RF_DR_HIGH_val = 1;
+		default:
+		printf("Data rate must be set to either 250 (kBPS), 1 (MBPS) or 2 (MBPS)");
+	}
+	unsigned char* tmp_RF_SETUP = readRegister(RF_SETUP, 1);
+	*tmp_RF_SETUP = setBit(*tmp_RF_SETUP, RF_DR_LOW, RF_DR_LOW_val);   // Set RF_DR_LOW bit 
+	*tmp_RF_SETUP = setBit(*tmp_RF_SETUP, RF_DR_HIGH, RF_DR_HIGH_val); // Set RF_DR_HIGH bit 
+	unsigned char tmp_val [] = {*tmp_RF_SETUP};
+	writeRegister(RF_SETUP, tmp_val, 1);
+}
 
 
 void NRF24L01p::writeRegister(unsigned char thisRegister, unsigned char thisValue [], int byteNum)
@@ -261,8 +287,7 @@ void NRF24L01p::txData(unsigned char DATA [], int BYTE_NUM)
 
 /* rData Receive Data
 Receive data
-@param DATA is the data to transmit
-@param BYTE_NUM is the number of bytes to transmit 1-5
+@param BYTE_NUM is the number of bytes to receive 1-5 (Why 1-5? is this true? test if this can be larger)
 register values are read into NRF24L01Class.register_value array
 */
 unsigned char * NRF24L01p::rData(int byteNum)

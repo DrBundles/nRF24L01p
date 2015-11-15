@@ -55,7 +55,15 @@ class NRF24L01p
 	/*SETUP DATA PIPES
 	Setup the data pipes for TX and RX
 	*/
-	void setup_data_pipes(unsigned char pipesOn [], unsigned char fixedPayloadWidth []);
+	void setup_data_pipes(unsigned char pipesOn [], const int fixedPayloadWidth);
+	
+	/*SETUP RF DATA RATE
+	Set data rate between 1MBPS or 2MBPS
+	dataRate = 250 for 250-kbps
+			 = 1 for 1-MBPS
+			 = 2 for 2-MBPS
+	*/
+	void set_data_rate(const int dataRate);
 	
 
 	/* Write Register
