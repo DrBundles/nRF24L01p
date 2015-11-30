@@ -4,7 +4,8 @@
 */
 #ifndef NRF24L01p_h
 #define NRF24L01p_h
-#include "Arduino.h"
+//#include "Arduino.h"
+#include "SPI.h"
 
 // TODO
 // Protected vs private variables (incl _private variable names)
