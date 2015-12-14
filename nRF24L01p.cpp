@@ -90,17 +90,21 @@ void NRF24L01p::set_data_rate(const int dataRate)
 	int RF_DR_HIGH_val = 1;
 	switch(dataRate)
 	{
-		case 250: // 250-kBPS
-		RF_DR_LOW_val = 1;
-		RF_DR_HIGH_val = 0;
-		case 1: // 1-MBPS
-		RF_DR_LOW_val = 0;
-		RF_DR_HIGH_val = 0;
-		case 2: // 2-MBPS
-		RF_DR_LOW_val = 0;
-		RF_DR_HIGH_val = 1;
-		default:
-		printf("Data rate must be set to either 250 (kBPS), 1 (MBPS) or 2 (MBPS)");
+		case 250:{ // 250-kBPS
+		  RF_DR_LOW_val = 1;
+		  RF_DR_HIGH_val = 0;
+      break;}
+		case 1:{ // 1-MBPS
+		  RF_DR_LOW_val = 0;
+		  RF_DR_HIGH_val = 0;
+      break;}
+		case 2:{ // 2-MBPS
+		  RF_DR_LOW_val = 0;
+		  RF_DR_HIGH_val = 1;
+      break;}
+		default:{
+		  printf("Data rate must be set to either 250 (kBPS), 1 (MBPS) or 2 (MBPS)");
+      break;}
 	}
 	unsigned char* tmp_RF_SETUP = readRegister(RF_SETUP, 1);
 	*tmp_RF_SETUP = setBit(*tmp_RF_SETUP, RF_DR_LOW, RF_DR_LOW_val);   // Set RF_DR_LOW bit 
