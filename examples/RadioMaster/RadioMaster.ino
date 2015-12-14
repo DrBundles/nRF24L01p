@@ -67,7 +67,8 @@ int CSN_pin = 10;
 // RF_CH can be set from 0-83. Any channel higher than 83 is off limits in US by FCC law
 // SETUP_AW: AW=11-5 byte address width
 NRF24L01p myRadio(CE_pin,CSN_pin);
-
+	
+const int fixedPayloadWidth = 2; // number of bytes for payload width
 // GLOBALS << GLOBALS  << GLOBALS  << GLOBALS  << GLOBALS 
 
 
@@ -88,7 +89,7 @@ void setup()
 	//
 	// Use default addresses for now _ CHANGE ADDRESSES HERE IN FUTURE
 	unsigned char pipesOn [] = {0x03}; // which pipes to turn on for receiving
-	unsigned char fixedPayloadWidth [] = {0x02}; // number of bytes for payload width
+	//unsigned char fixedPayloadWidth [] = {0x02}; // number of bytes for payload width
 	myRadio.setup_data_pipes(pipesOn, fixedPayloadWidth);
 	
 	//DEBUG - change RX_ADDR_P0 to see if I am reading the right value
