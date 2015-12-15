@@ -128,6 +128,9 @@ void loop()
 	{
 		unsigned char tmp_status = myRadio.IRQ_reset_and_respond();
 		
+                Serial.print("tmp_status: ");
+                Serial.println(tmp_status,BIN);
+
 		if CHECK_BIT(tmp_status,0) // TX_FIFO full
 		{
 			//Serial.println("TX_FIFO Full");
@@ -191,7 +194,10 @@ void loop()
 		// 2nd byte is data
 		serialCommand = *(tmpRxData+0);
 		serialData    = *(tmpRxData+1);
-		
+		Serial.print("serialCommand: ");
+                Serial.println(serialCommand);
+                Serial.print("serialData: ");
+                Serial.println(serialData);
 		if(serialCommand == 0x02)
 		{
 			Serial.print(serialData); // 2nd byte
@@ -230,9 +236,10 @@ void IRQ_resolve()
 {
 	// Get the IRQ code from the receiver and assign it to IRQ_state variable
 	//unsigned char * p_tmp;
-	//Serial.println("IRQ");
-	//IRQ_state = * myRadio.readRegister(STATUS,1); // this returns a pointer, so I dereferenced it to the unsigned char for IRQ_state
-	IRQ_state = 1;
+	//Serial.print("IRQ STATUS: ");
+	//IRQ_state = * myRadio.readRegister(STATUS,0); // this returns a pointer, so I dereferenced it to the unsigned char for IRQ_state
+	//Serial.println(IRQ_state,BIN);
+  IRQ_state = 1;
 }
 
 
@@ -295,5 +302,4 @@ void clear_interrupts(void)
 	myRadio.flushTX();
 }
 */
-
 
