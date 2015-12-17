@@ -94,7 +94,7 @@ void setup()
 	// Setup data pipes, addresses etc
 	//
 	// Use default addresses for now _ CHANGE ADDRESSES HERE IN FUTURE
-	unsigned char pipesOn [] = {0x03}; // which pipes to turn on for receiving
+	unsigned char pipesOn [] = {0x01}; // which pipes to turn on for receiving
 	//unsigned char fixedPayloadWidth [] = {0x02}; // number of bytes for payload width
 	myRadio.setup_data_pipes(pipesOn, fixedPayloadWidth);
 	
