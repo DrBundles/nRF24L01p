@@ -7,7 +7,6 @@
 		   Data and commands are transmitted between LabView and the radio as 2 bytes
 		   the first is a command byte and the second is a data byte.
 	
-       test2
 	TODO: Add capability such that Labview can ask remote sensor for data
 		  Change addresses
 		  Payload width as a easier function
@@ -69,7 +68,7 @@ int CSN_pin = 10;
 // SETUP_AW: AW=11-5 byte address width
 NRF24L01p myRadio(CE_pin,CSN_pin);
 	
-const int fixedPayloadWidth = 2; // number of bytes for payload width
+const int fixedPayloadWidth = 3; // number of bytes for payload width
 // GLOBALS << GLOBALS  << GLOBALS  << GLOBALS  << GLOBALS 
 
 
@@ -94,8 +93,10 @@ void setup()
 	myRadio.setup_data_pipes(pipesOn, fixedPayloadWidth);
 	
 	//DEBUG - change RX_ADDR_P0 to see if I am reading the right value
-	unsigned char tmpArr [] = {0xE7,0xE7,0xE7,0xE7,0xE7};
-	myRadio.writeRegister(RX_ADDR_P0,tmpArr, 5);
+	//unsigned char tmpArr [] = {0xE7,0xE7,0xE7,0xE7,0xE7};
+	//myRadio.writeRegister(RX_ADDR_P0,tmpArr, 5);
+	unsigned char tmpArr [] = {0xE7,0xE7,0xE7};
+	myRadio.writeRegister(RX_ADDR_P0,tmpArr, 3);
 	
 	
 	// Configure radio to be TX (transmitter) or RX (receiver)
@@ -121,9 +122,10 @@ void setup()
 void loop()
 {
 	/* add main program code here */
-	int serialCommand = 0; // Serial commands: 0-do nothing
+	unsigned char serialCommand = 0; // Serial commands: 0-do nothing
 						   //                  1-query radioSlave for data
-	int serialData	  = 0; // Data byte
+	unsigned char serialData1	  = 0; // Data byte
+	unsigned char serialData2	  = 0; // Data byte
 	
 	if (IRQ_state == 1)
 	{
@@ -166,7 +168,8 @@ void loop()
 	if (Serial.available())
 	{
 		serialCommand = Serial.parseInt(); // First byte is command
-		serialData    = Serial.parseInt(); // Second byte is data
+		serialData1   = Serial.parseInt(); // Second byte is data
+		serialData2   = Serial.parseInt(); // Second byte is data
 	}
 	
 	if (serialCommand == 0x01) // query radioSlave for data
@@ -178,8 +181,8 @@ void loop()
 		// Turn Master to transmitter
 		myRadio.txMode();
 		// MOSI Command byte for read signal: 0x01
-		unsigned char tmpData [] = {0x01, 0x00}; // Data needs to be the same size as the fixedDataWidth set in setup
-		myRadio.txData(tmpData, 2); // This is currently sending data to pipe 0 at the default address. Change this once the radio is working
+		unsigned char tmpData [] = {0x01, 0x00, 0x00}; // Data needs to be the same size as the fixedDataWidth set in setup
+		myRadio.txData(tmpData, fixedPayloadWidth); // This is currently sending data to pipe 0 at the default address. Change this once the radio is working
 		//
 		// Turn Master to receiver
 		myRadio.rMode();
@@ -190,19 +193,24 @@ void loop()
 	if (rxDataFLAG == 1) 
 	{
 		// Receive data send to LabView
-		unsigned char * tmpRxData = myRadio.rData(2);
+		unsigned char * tmpRxData = myRadio.rData(fixedPayloadWidth);
 		// 1st byte is command
 		// 2nd byte is data
 		serialCommand = *(tmpRxData+0);
-		serialData    = *(tmpRxData+1);
+		serialData1   = *(tmpRxData+1);
+		serialData2   = *(tmpRxData+2);
 		Serial.print("serialCommand: ");
                 Serial.println(serialCommand);
-                Serial.print("serialData: ");
-                Serial.println(serialData);
+                Serial.print("serialData1: ");
+                Serial.println(serialData1);
+                Serial.print("serialData2: ");
+                Serial.println(serialData2);
+    /*
 		if(serialCommand == 0x02)
 		{
-			Serial.print(serialData); // 2nd byte
+			Serial.print(serialData1); // 2nd byte
 		}
+    */
 		
 		myRadio.flushRX();
 		myRadio.txMode();
