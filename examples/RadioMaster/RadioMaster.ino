@@ -131,8 +131,11 @@ void loop()
 	{
 		unsigned char tmp_status = myRadio.IRQ_reset_and_respond();
 		
-                Serial.print("tmp_status: ");
-                Serial.println(tmp_status,BIN);
+    /*
+    // DEBUG            
+    Serial.print("tmp_status: ");
+    Serial.println(tmp_status,BIN);
+    */
 
 		if CHECK_BIT(tmp_status,0) // TX_FIFO full
 		{
