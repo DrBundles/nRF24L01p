@@ -7,6 +7,7 @@
 		   Data and commands are transmitted between LabView and the radio as 2 bytes
 		   the first is a command byte and the second is a data byte.
 	
+       test2
 	TODO: Add capability such that Labview can ask remote sensor for data
 		  Change addresses
 		  Payload width as a easier function
