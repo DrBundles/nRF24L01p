@@ -71,6 +71,14 @@ NRF24L01p myRadio(CE_pin,CSN_pin);
 const int fixedPayloadWidth = 3; // number of bytes for payload width
 // GLOBALS << GLOBALS  << GLOBALS  << GLOBALS  << GLOBALS 
 
+uint16_t bytes2double(unsigned char uLSB, unsigned char uMSB)
+{
+  uint16_t tmp_double = 0;
+  tmp_double = (tmp_double | uMSB);
+  tmp_double = (tmp_double << 8);
+  tmp_double = (tmp_double | uLSB);
+  return tmp_double;
+}
 
 void setup()
 {
@@ -202,12 +210,18 @@ void loop()
 		serialCommand = *(tmpRxData+0);
 		serialData1   = *(tmpRxData+1);
 		serialData2   = *(tmpRxData+2);
+    uint16_t temperatureVal = bytes2double(serialData1, serialData2);
+    
 		Serial.print("serialCommand: ");
                 Serial.println(serialCommand);
-                Serial.print("serialData1: ");
+                Serial.print("serialData1 LSB: ");
                 Serial.println(serialData1);
-                Serial.print("serialData2: ");
+                Serial.print("serialData2 MSB: ");
                 Serial.println(serialData2);
+                Serial.print("temperature: ");
+                Serial.println(temperatureVal);
+                Serial.print("temperature BIN: ");
+                Serial.println(temperatureVal, BIN);
     /*
 		if(serialCommand == 0x02)
 		{
