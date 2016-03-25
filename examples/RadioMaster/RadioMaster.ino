@@ -183,7 +183,7 @@ void loop()
 		serialData2   = Serial.parseInt(); // Second byte is data
 	}
 	
-	if (serialCommand == 0x01) // query radioSlave for data
+	if ((serialCommand == 0x01)|(serialCommand == 0x03)) // query radioSlave for data
 	{
 		// Fixed payload width is 2-byte
 		// 1st byte is command byte, 2nd is data byte
@@ -192,7 +192,7 @@ void loop()
 		// Turn Master to transmitter
 		myRadio.txMode();
 		// MOSI Command byte for read signal: 0x01
-		unsigned char tmpData [] = {0x01, 0x00, 0x00}; // Data needs to be the same size as the fixedDataWidth set in setup
+		unsigned char tmpData [] = {serialCommand, 0x00, 0x00}; // Data needs to be the same size as the fixedDataWidth set in setup
 		myRadio.txData(tmpData, fixedPayloadWidth); // This is currently sending data to pipe 0 at the default address. Change this once the radio is working
 		//
 		// Turn Master to receiver
@@ -210,24 +210,33 @@ void loop()
 		serialCommand = *(tmpRxData+0);
 		serialData1   = *(tmpRxData+1);
 		serialData2   = *(tmpRxData+2);
-    uint16_t temperatureVal = bytes2double(serialData1, serialData2);
+
+    if(serialCommand == 0x02)
+    {
+      uint16_t temperatureVal = bytes2double(serialData1, serialData2);
+      
+      Serial.print("serialCommand: ");
+                  Serial.println(serialCommand);
+                  Serial.print("serialData1 LSB: ");
+                  Serial.println(serialData1);
+                  Serial.print("serialData2 MSB: ");
+                  Serial.println(serialData2);
+                  Serial.print("temperature: ");
+                  Serial.println(temperatureVal);
+                  Serial.print("temperature BIN: ");
+                  Serial.println(temperatureVal, BIN);
+    }
     
-		Serial.print("serialCommand: ");
-                Serial.println(serialCommand);
-                Serial.print("serialData1 LSB: ");
-                Serial.println(serialData1);
-                Serial.print("serialData2 MSB: ");
-                Serial.println(serialData2);
-                Serial.print("temperature: ");
-                Serial.println(temperatureVal);
-                Serial.print("temperature BIN: ");
-                Serial.println(temperatureVal, BIN);
-    /*
-		if(serialCommand == 0x02)
+		if(serialCommand == 0x04)
 		{
-			Serial.print(serialData1); // 2nd byte
+      uint16_t ADCVal = bytes2double(serialData1, serialData2);
+      
+      Serial.print("serialCommand: ");
+                  Serial.println(serialCommand);
+                  Serial.print("ADC Value: ");
+                  Serial.println(ADCVal);
 		}
-    */
+    
 		
 		myRadio.flushRX();
 		myRadio.txMode();
