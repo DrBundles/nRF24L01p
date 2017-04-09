@@ -1,16 +1,16 @@
-/* NRF24L01p.h - Library for NRF24L01p Radio
+/* nRF24L01p.h - Library for nRF24L01p Radio
 	Created by: Steve Lammers, 2/21/2015
 	Released to the public domain.
 */
-#ifndef NRF24L01p_h
-#define NRF24L01p_h
+#ifndef nRF24L01p_h
+#define nRF24L01p_h
 //#include "Arduino.h"
 #include "SPI.h"
 
 // TODO
 // Protected vs private variables (incl _private variable names)
 
-class NRF24L01p
+class nRF24L01p
 {
  protected:
 
@@ -29,7 +29,7 @@ class NRF24L01p
 		@param _cspin is the pin attached to Chip Select
 	*/
 	//void init(int _cepin, int _csnpin); // Constructor prototype declaration, See Radio.cpp for definition
-	NRF24L01p(int _cepin, int _csnpin); // Constructor prototype declaration, See Radio.cpp for definition
+	nRF24L01p(int _cepin, int _csnpin); // Constructor prototype declaration, See Radio.cpp for definition
 	
 	
 	/*DEBUG
@@ -78,7 +78,7 @@ class NRF24L01p
 	unsigned char * readRegister(unsigned char thisRegister, int byteNum);
 	
 	/* CONFIG
-	Configure the NRF24L01p and startup
+	Configure the nRF24L01p and startup
 	@param RXTX sets the radio into 1:Receive 0:Transmit
 	@param PWRUP_PWRDOWN 1:Power Up 0:Power Down
 	*/
@@ -116,7 +116,7 @@ class NRF24L01p
 	Receive data
 	@param DATA is the data to transmit
 	@param BYTE_NUM is the number of bytes to transmit 1-5
-	register values are read into NRF24L01Class.register_value array
+	register values are read into nRF24L01Class.register_value array
 	*/
 	unsigned char * rData(int byteNum);
 	
