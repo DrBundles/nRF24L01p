@@ -1,4 +1,4 @@
-/* nRF24L01p.h - Library for nRF24L01p Radio
+/* NRF24L01p.h - Library for NRF24L01p Radio
 	Created by: Steve Lammers, 2/21/2015
 	Released to the public domain.
 
@@ -17,7 +17,16 @@
 	IRQ  2
 */ 
 
-#include "nRF24L01p.h"
+//#define AVR
+#define ARDUINO
+
+#ifndef ARDUINO
+  #include <avr/io.h>
+  #include <util/delay.h>
+  #include "USART.h"
+#endif
+
+#include "NRF24L01p.h"
 #include "nRF24L01_define_map.h"
 #include "string.h"
 #include "SPI.h"
@@ -25,24 +34,34 @@
 // Used to check the status of a given bit in a variable
 #define CHECK_BIT(var,pos) ((var & (1 << pos)) == (1 << pos))
 
-nRF24L01p::nRF24L01p(int _cepin, int _csnpin)
-{
-	ce_pin = _cepin;
-	csn_pin = _csnpin;
-}
+#ifdef ARDUINO
+  NRF24L01p::NRF24L01p(int _cepin, int _csnpin)
+  {
+    ce_pin = _cepin;
+    csn_pin = _csnpin;
+  }
+#else
+  //NRF24L01p::NRF24L01p(int _cepin, int _csnpin)
+  NRF24L01p::NRF24L01p()
+  {
+    //ce_pin = _cepin;
+    //csn_pin = _csnpin;
+    initSPImaster();
+  }
+#endif
 
 
-int nRF24L01p::get_ce_pin(void) 
+int NRF24L01p::get_ce_pin(void) 
 { 
 	return ce_pin; 
 }
-	
-void nRF24L01p::setDebugVal(int tmp_debug_val)
+
+void NRF24L01p::setDebugVal(int tmp_debug_val)
 {
 	debug_val = tmp_debug_val;
 }
 	
-int nRF24L01p::getDebugVal(void)
+int NRF24L01p::getDebugVal(void)
 {
 	return debug_val;
 }
@@ -52,7 +71,7 @@ Used to more easily set or clear bits in registers etc
 @param bitNum is the bit to change, 0-7
 @param setClear is the boolean value to set the bit 1 or 0
 */
-unsigned char nRF24L01p::setBit(unsigned char byteIn, int bitNum, boolean setClear)
+unsigned char NRF24L01p::setBit(unsigned char byteIn, int bitNum, bool setClear)
 {
 	if(setClear == 1)
 		byteIn |= (1<<bitNum);
@@ -63,7 +82,7 @@ unsigned char nRF24L01p::setBit(unsigned char byteIn, int bitNum, boolean setCle
 }
 	
 
-void nRF24L01p::begin(void)
+void NRF24L01p::begin(void)
 {
 	// Initialize pins
 	pinMode(ce_pin, OUTPUT);
@@ -76,7 +95,7 @@ void nRF24L01p::begin(void)
 
 }
 
-void nRF24L01p::setup_data_pipes(unsigned char pipesOn [], const int fixedPayloadWidth)
+void NRF24L01p::setup_data_pipes(unsigned char pipesOn [], const int fixedPayloadWidth)
 {
 	writeRegister(EN_RXADDR, pipesOn, 1);
 	unsigned char widthArg [] = {(unsigned char)fixedPayloadWidth};
@@ -84,7 +103,7 @@ void nRF24L01p::setup_data_pipes(unsigned char pipesOn [], const int fixedPayloa
 }
 
 
-void nRF24L01p::set_data_rate(const int dataRate)
+void NRF24L01p::set_data_rate(const int dataRate)
 {
 	int RF_DR_LOW_val = 0;
 	int RF_DR_HIGH_val = 1;
@@ -114,7 +133,7 @@ void nRF24L01p::set_data_rate(const int dataRate)
 }
 
 
-void nRF24L01p::writeRegister(unsigned char thisRegister, unsigned char thisValue [], int byteNum)
+void NRF24L01p::writeRegister(unsigned char thisRegister, unsigned char thisValue [], int byteNum)
 {
 	// Must start with CSN pin high, then bring CSN pin low for the transfer
 	// Transmit the command byte
@@ -136,7 +155,7 @@ void nRF24L01p::writeRegister(unsigned char thisRegister, unsigned char thisValu
 
 
 
-unsigned char * nRF24L01p::readRegister(unsigned char thisRegister, int byteNum)
+unsigned char * NRF24L01p::readRegister(unsigned char thisRegister, int byteNum)
 {
 	// Must start with CSN pin high, then bring CSN pin low for the transfer
 	// Transmit the command byte and the same number of dummy bytes as expected to receive from the register
@@ -165,11 +184,11 @@ unsigned char * nRF24L01p::readRegister(unsigned char thisRegister, int byteNum)
 
 
 /* CONFIG
-Configure the nRF24L01p and startup
+Configure the NRF24L01p and startup
 @param RXTX sets the radio into 1:Receive 0:Transmit
 @param PWRUP_PWRDOWN 1:Power Up 0:Power Down
 */
-void nRF24L01p::configRadio(boolean RXTX, boolean PWRUP_PWRDOWN)
+void NRF24L01p::configRadio(boolean RXTX, boolean PWRUP_PWRDOWN)
 {
 	// CRC is enabled with a 2-byte encoding scheme
 	unsigned char configByte = 0b00001111;
@@ -191,7 +210,7 @@ void nRF24L01p::configRadio(boolean RXTX, boolean PWRUP_PWRDOWN)
 Reset the IRQ in the radio STATUS register
 Also resolve the condition which triggered the interrupt
 */
-unsigned char nRF24L01p::IRQ_reset_and_respond(void)
+unsigned char NRF24L01p::IRQ_reset_and_respond(void)
 {
 	// Serial.println(" ------------------ RESPOND TO IRQ --------------------- ");
 	unsigned char tmp_status = * readRegister(STATUS,1);
@@ -203,7 +222,7 @@ unsigned char nRF24L01p::IRQ_reset_and_respond(void)
 }
 
 
-void nRF24L01p::clear_interrupts(void)
+void NRF24L01p::clear_interrupts(void)
 {
 	// Clear any interrupts
 	unsigned char tmp_state [] = {1<<RX_DR};
@@ -220,7 +239,7 @@ void nRF24L01p::clear_interrupts(void)
 /* txMode Transmit Mode
 Put radio into transmission mode
 */
-void nRF24L01p::txMode(void)
+void NRF24L01p::txMode(void)
 {
 	configRadio(0,1);
 	// CE is held LOW unless a packet is being actively transmitted, In which case it is toggled high for >10us
@@ -230,7 +249,7 @@ void nRF24L01p::txMode(void)
 /* rMode Receive Mode
 Put radio into receiving mode
 */
-void nRF24L01p::rMode(void)
+void NRF24L01p::rMode(void)
 {
 	configRadio(1,1);
 	// CE HIGH monitors air and receives packets while in receive mode
@@ -244,7 +263,7 @@ Transmit data
 @param DATA is the data to transmit
 @param BYTE_NUM is the number of bytes to transmit 1-5
 */
-void nRF24L01p::txData(unsigned char DATA [], int BYTE_NUM)
+void NRF24L01p::txData(unsigned char DATA [], int BYTE_NUM)
 {
 	// First the command byte (0xA0, W_TX_PAYLOAD) is sent and then the payload. 
 	// The number of payload bytes sent must match the payload length of the receiver you are sending the payload to
@@ -294,7 +313,7 @@ Receive data
 @param BYTE_NUM is the number of bytes to receive 1-5 (Why 1-5? is this true? test if this can be larger)
 register values are read into nRF24L01Class.register_value array
 */
-unsigned char * nRF24L01p::rData(int byteNum)
+unsigned char * NRF24L01p::rData(int byteNum)
 {
 
 	// Bring CE low to disable the receiver
@@ -332,7 +351,7 @@ unsigned char * nRF24L01p::rData(int byteNum)
 /* flushTX Flush TX FIFO
 
 */
-void nRF24L01p::flushTX(void)
+void NRF24L01p::flushTX(void)
 {
 	// Must start with CSN pin high, then bring CSN pin low for the transfer
 	// Transmit the command byte
@@ -345,7 +364,7 @@ void nRF24L01p::flushTX(void)
 /* flushTX Flush TX FIFO
 
 */
-void nRF24L01p::flushRX(void)
+void NRF24L01p::flushRX(void)
 {
 	// Must start with CSN pin high, then bring CSN pin low for the transfer
 	// Transmit the command byte
@@ -357,7 +376,7 @@ void nRF24L01p::flushRX(void)
 
 
 
-//nRF24L01p nRF24L01p;
+//NRF24L01p NRF24L01p;
 
 
 
