@@ -4,6 +4,11 @@
 */
 #ifndef NRF24L01p_h
 #define NRF24L01p_h
+
+#ifndef ARDUINO
+  #include "nRF24L01_define_map.h"
+  #include "ATMEGA-328-pinDefines.h" /* This is where the SPI pin info is located */
+#endif
 //#include "Arduino.h"
 #include "SPI.h"
 
@@ -13,9 +18,10 @@
 class NRF24L01p
 {
  protected:
-
-	int ce_pin;  // Chip Enable pin (usually digital pin 9)
-	int csn_pin; // Chip Select Not pin (usually digital pin 10)
+  #ifdef ARDUINO
+	  int ce_pin;  // Chip Enable pin (usually digital pin 9)
+	  int csn_pin; // Chip Select Not pin (usually digital pin 10)
+  #endif
 	int payload_size; // Fixed size of payloads
 	int pipe0_reading_address[5]; // Last address set on pipe 0 for reading
 	int addr_width; // The address width to use - 3,4,or 5 bytes
@@ -29,13 +35,19 @@ class NRF24L01p
 		@param _cspin is the pin attached to Chip Select
 	*/
 	//void init(int _cepin, int _csnpin); // Constructor prototype declaration, See Radio.cpp for definition
-	NRF24L01p(int _cepin, int _csnpin); // Constructor prototype declaration, See Radio.cpp for definition
+  #ifdef ARDUINO
+	  NRF24L01p(int _cepin, int _csnpin); // Constructor prototype declaration, See Radio.cpp for definition
+  #else
+	  NRF24L01p(); // Constructor prototype declaration, See Radio.cpp for definition
+  #endif
 	
 	
 	/*DEBUG
 		Tests for debugging
 	*/
-	int get_ce_pin(void);
+  #ifdef ARDUINO
+	  int get_ce_pin(void);
+  #endif
 	
 	void setDebugVal(int debug_val);
 	int getDebugVal(void);
@@ -46,7 +58,7 @@ class NRF24L01p
 	@param bitNum is the bit to change, 0-7
 	@param setClear is the boolean value to set the bit 1 or 0
 	*/
-	unsigned char setBit(unsigned char byteIn, int bitNum, boolean setClear);
+	unsigned char setBit(unsigned char byteIn, int bitNum, bool setClear);
 
 	/*BEGIN
 	Call this in setup, before calling any other methods
@@ -82,7 +94,7 @@ class NRF24L01p
 	@param RXTX sets the radio into 1:Receive 0:Transmit
 	@param PWRUP_PWRDOWN 1:Power Up 0:Power Down
 	*/
-	void configRadio(boolean RXTX, boolean PWRUP_PWRDOWN);
+	void configRadio(bool RXTX, bool PWRUP_PWRDOWN);
 	
 	/* IRQ_reset_and_respond
 	Reset the IRQ in the radio STATUS register
@@ -128,7 +140,18 @@ class NRF24L01p
 	/* flushTX Flush RX FIFO
 	*/
 	void flushRX(void);
-	
+
+    
+ private:
+  /* override functios to write to pins in either AVR or Arduino
+   * */
+  void digitalWrite_csn(bool val);
+
+  void digitalWrite_ce(bool val);
+
+  #ifndef ARDUINO
+    void delay(int val);
+  #endif
 
 };
 
