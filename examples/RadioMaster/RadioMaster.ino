@@ -189,10 +189,11 @@ void loop()
 		// 1st byte is command byte, 2nd is data byte
 		// Master sends command byte to slave, slave returns data byte for reading
 		//
+    Serial.println("Send serial command");
 		// Turn Master to transmitter
 		myRadio.txMode();
 		// MOSI Command byte for read signal: 0x01
-		unsigned char tmpData [] = {serialCommand, 0x00, 0x00}; // Data needs to be the same size as the fixedDataWidth set in setup
+		unsigned char tmpData [] = {serialCommand, 0x01, 0x00}; // Data needs to be the same size as the fixedDataWidth set in setup
 		myRadio.txData(tmpData, fixedPayloadWidth); // This is currently sending data to pipe 0 at the default address. Change this once the radio is working
 		//
 		// Turn Master to receiver
@@ -201,8 +202,9 @@ void loop()
 	
 	
 	//  radioSlave has returned data
-	if (rxDataFLAG == 1) 
+	if (rxDataFLAG == 1)
 	{
+		// Get package
 		// Receive data send to LabView
 		unsigned char * tmpRxData = myRadio.rData(fixedPayloadWidth);
 		// 1st byte is command
@@ -211,6 +213,7 @@ void loop()
 		serialData1   = *(tmpRxData+1);
 		serialData2   = *(tmpRxData+2);
 
+		// Check Command byte
     if(serialCommand == 0x02)
     {
       uint16_t temperatureVal = bytes2double(serialData1, serialData2);
@@ -317,7 +320,7 @@ void IRQ_reset_and_respond(void)
 		rxDataFLAG = 1; //Set Rx Data FLAG
 	}
 	
-	clear_interrupts();
+	myRadio.clear_interrupts();
 	IRQ_state = 0; //reset IRQ_state
 	
 }

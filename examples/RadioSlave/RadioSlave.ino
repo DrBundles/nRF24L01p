@@ -50,8 +50,6 @@
 #include <nRF24L01p.h>
 #include <SPI.h>
 
-//NRF24L01pClass * myRadio;
-
 // Interrupt variable
 volatile unsigned char IRQ_state = 0x00;
 
@@ -66,26 +64,24 @@ int rxDataFLAG = 0; // Indicates that there is data in the RX FIFO buffer
 int CE_pin = 9;
 int CSN_pin = 10;
 // int airDataRate = 250; //kBps, can be 250, 1000 or 2000 section 6.3.2
-//int rfChannelFreq = 0x02; // = 2400 + RF_CH(MHz) section 6.3.3 0x02 is the default
-//  RF_CH can be set from 0-83. Any channel higher than 83 is off limits in US by FCC law
-//SETUP_AW: AW=11-5 byte address width
-//myRadio = new NRF24L01p;
+// int rfChannelFreq = 0x02; // = 2400 + RF_CH(MHz) section 6.3.3 0x02 is the default
+// RF_CH can be set from 0-83. Any channel higher than 83 is off limits in US by FCC law
+// SETUP_AW: AW=11-5 byte address width
 NRF24L01p myRadio(CE_pin,CSN_pin);
-//myRadio.init(CE_pin,CSN_pin);
-
-const int fixedPayloadWidth = 2; // number of bytes for payload width
+	
+const int fixedPayloadWidth = 3; // number of bytes for payload width
 // GLOBALS << GLOBALS  << GLOBALS  << GLOBALS  << GLOBALS 
+
 int signalVal = 0x05; // Dummy signal value for testing
 
 void setup()
 {
 	/* add setup code here */
 	Serial.begin(9600);
-	//Serial.println("Begin startup");
+	// Serial.println("Begin startup");
 	
 	// Begin SPI communication
 	SPI.begin();
-	
 	
 	
 	// Start radio
@@ -99,8 +95,10 @@ void setup()
 	myRadio.setup_data_pipes(pipesOn, fixedPayloadWidth);
 	
 	//DEBUG - change RX_ADDR_P0 to see if I am reading the right value
-	unsigned char tmpArr [] = {0xE7,0xE7,0xE7,0xE7,0xE7};
-	myRadio.writeRegister(RX_ADDR_P0,tmpArr, 5);
+	//unsigned char tmpArr [] = {0xE7,0xE7,0xE7,0xE7,0xE7};
+	//myRadio.writeRegister(RX_ADDR_P0,tmpArr, 5);
+	unsigned char tmpArr [] = {0xE7,0xE7,0xE7};
+	myRadio.writeRegister(RX_ADDR_P0,tmpArr, 3);
 	
 	
 	// Configure radio to be TX (transmitter) or RX (receiver)
@@ -126,14 +124,21 @@ void setup()
 void loop()
 {
 	/* add main program code here */
-	int serialCommand = 0; // Serial commands: 0-do nothing
+	unsigned char serialCommand = 0; // Serial commands: 0-do nothing
 						   //                  1-query radioSlave for data
-	int serialData	  = 0; // Data byte
+	unsigned char serialData1	  = 0; // Data byte
+	unsigned char serialData2	  = 0; // Data byte
 	
 	if (IRQ_state == 1)
 	{
 		unsigned char tmp_status = myRadio.IRQ_reset_and_respond();
 		
+    
+    // DEBUG            
+    Serial.print("tmp_status: ");
+    Serial.println(tmp_status,BIN);
+    
+
 		if CHECK_BIT(tmp_status,0) // TX_FIFO full
 		{
 			//Serial.println("TX_FIFO Full");
@@ -149,18 +154,18 @@ void loop()
 		}
 		if CHECK_BIT(tmp_status,5) // Data sent TX FIFO interrupt
 		{
-			//Serial.println("Data Sent TX FIFO IRQ");
+			Serial.println("Data Sent TX FIFO IRQ");
 		}
 		if CHECK_BIT(tmp_status,6) // Data ready RX FIFO interrupt
 		{
-			//Serial.println("Data ready RX FIFO IRQ");
+			Serial.println("Data ready RX FIFO IRQ");
 			// Read the data from the R_RX_PAYLOAD
 			// RX_P_NO bits 3:1 tell what pipe number the payload is available in 000-101: Data Pipe Number, 110: Not Used, 111: RX_FIFO Empty
 			// Get bits 3:1 and right shift to get pipe number
 			//pipeNumber = (tmp_status & 0xE) >> 1;
 			rxDataFLAG = 1; //Set Rx Data FLAG
 		}
-		
+			
 		IRQ_state = 0; //reset IRQ_state
 	}
 	
@@ -169,18 +174,29 @@ void loop()
 	if (rxDataFLAG == 1)
 	{
 		// Get package
-		unsigned char * tmpRxData = myRadio.rData(2);
+		// Receive data send to LabView
+		unsigned char * tmpRxData = myRadio.rData(fixedPayloadWidth);
+		// 1st byte is command
+		// 2nd byte is data
 		serialCommand = *(tmpRxData+0);
-		serialData    = *(tmpRxData+1);
+		serialData1   = *(tmpRxData+1);
+		serialData2   = *(tmpRxData+2);
+
+    Serial.println("Serial Data:");
+    Serial.println(serialCommand);
+    Serial.println(serialData1);
+    Serial.println(serialData2);
 		// Check Command byte
 		if(serialCommand == 0X01) // Read signal and return data to master
 		{
 			signalVal++; // Dummy signal value for testing
+      Serial.print("signalVal: ");
+      Serial.println(signalVal);
 			// Turn Master to transmitter
 			myRadio.txMode();
 			// MISO Command byte for return signal value: 0x02
-			unsigned char tmpData [] = {0x02, signalVal}; // Data needs to be the same size as the fixedDataWidth set in setup
-			myRadio.txData(tmpData, 2); // This is currently sending data to pipe 0 at the default address. Change this once the radio is working
+			unsigned char tmpData [] = {0x02, signalVal, 0x00}; // Data needs to be the same size as the fixedDataWidth set in setup
+			myRadio.txData(tmpData, fixedPayloadWidth); // This is currently sending data to pipe 0 at the default address. Change this once the radio is working
 			//
 			// Turn Master to receiver
 			myRadio.rMode();
@@ -195,9 +211,7 @@ void loop()
 }
 
 
-
-
-
+//******* FUNCTIONS **************** FUNCTIONS ***************** FUNCTIONS ****************************
 
 unsigned char setBit(unsigned char byteIn, int bitNum, boolean setClear)
 {
@@ -220,9 +234,10 @@ void IRQ_resolve()
 {
 	// Get the IRQ code from the receiver and assign it to IRQ_state variable
 	//unsigned char * p_tmp;
-	//Serial.println("IRQ");
-	//IRQ_state = * myRadio.readRegister(STATUS,1); // this returns a pointer, so I dereferenced it to the unsigned char for IRQ_state
-	IRQ_state = 1;
+	//Serial.print("IRQ STATUS: ");
+	//IRQ_state = * myRadio.readRegister(STATUS,0); // this returns a pointer, so I dereferenced it to the unsigned char for IRQ_state
+	//Serial.println(IRQ_state,BIN);
+  IRQ_state = 1;
 }
 
 
@@ -234,7 +249,7 @@ Also resolve the condition which triggered the interrupt
 /*
 void IRQ_reset_and_respond(void)
 {
-	//Serial.println(" ------------------ RESPOND TO IRQ --------------------- ");
+	// Serial.println(" ------------------ RESPOND TO IRQ --------------------- ");
 	unsigned char tmp_state [] = {0x00};
 	unsigned char tmp_status = * myRadio.readRegister(STATUS,1);
 	
@@ -269,7 +284,9 @@ void IRQ_reset_and_respond(void)
 	IRQ_state = 0; //reset IRQ_state
 	
 }
+*/
 
+/*
 void clear_interrupts(void)
 {
 	// Clear any interrupts
@@ -283,5 +300,4 @@ void clear_interrupts(void)
 	myRadio.flushTX();
 }
 */
-
 
